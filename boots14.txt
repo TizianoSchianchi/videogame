@@ -1,0 +1,247 @@
+export default class Boot extends Phaser.Scene {
+    private _setDepth: boolean;
+    private sf: Phaser.GameObjects.TileSprite;
+    private sf1: Phaser.GameObjects.TileSprite;
+    private sf2: Phaser.GameObjects.TileSprite;
+    private sf3: Phaser.GameObjects.TileSprite;
+    private sf4: Phaser.GameObjects.TileSprite;
+    private sfpav: Phaser.GameObjects.Image;    
+    private _sprite: Phaser.GameObjects.Sprite;
+    private _runAnimation: Array<number>=[26,25,24,23,22,21,20,19];
+    private _sprite1: Phaser.GameObjects.Sprite;
+    private _runcavallo: Array<number>=[ 8,9,10,11,12,13];
+    private _music: Phaser.Sound.BaseSound;
+    private _text: Phaser.GameObjects.Text;
+    private _text1: Phaser.GameObjects.Text;
+    bullet: any;
+    private bullets: Phaser.GameObjects.Group;
+    private lastFired = 0;
+    private speeds: number;
+    private cursors: { 
+    up: Phaser.Input.Keyboard.Key | undefined; 
+    down: Phaser.Input.Keyboard.Key | undefined; 
+    left:Phaser.Input.Keyboard.Key | undefined;
+    right: Phaser.Input.Keyboard.Key | undefined; 
+    space: Phaser.Input.Keyboard.Key | undefined; 
+    shift: Phaser.Input.Keyboard.Key | undefined; 
+};
+
+    
+    constructor() { super({key: "Boot"}); }
+    
+    
+    preload() {
+    
+    this.load.image("sf", "/assets/assets/images/backgrounds/5/1.png")
+    this.load.image("sf1", "/assets/assets/images/backgrounds/5/2.png")
+    this.load.image("sf2", "/assets/assets/images/backgrounds/5/3.png")
+    this.load.image("sf3", "/assets/assets/images/backgrounds/5/4.png")
+    this.load.image("sf4", "/assets/assets/images/backgrounds/5/5.png")
+    this.load.image("sfpav", "/assets/assets/images/backgrounds/5/7.png") 
+    
+    this.load.spritesheet("sprite", "assets/assets/images/players1/players1.png", {
+    frameWidth: 52,
+    frameHeight: 70,
+    endFrame: 84
+    });
+
+    this.load.spritesheet("sprite1", "assets/assets/images/players/players.png", {
+        frameWidth: 52,
+        frameHeight: 70,
+        endFrame: 84
+        
+        });
+    this.load.image('bullet', 'assets/assets/images/laser.png');
+    this.load.audio("intro", ["assets/assets/sounds/alltimelow.mp3"]);
+    }
+   
+    
+    create() {
+    
+
+    this.sf = this.add.tileSprite(1900, 800, 0, 900, "sf")
+    .setScale(2)
+    
+    this.sf1 = this.add.tileSprite(800, 200, 800, 400, "sf1")
+    .setScale(1.9)
+    
+    
+    this.sf2 = this.add.tileSprite(350, 250, 1500, 1000, "sf2")
+    .setScale(1)
+    
+    this.sf2 = this.add.tileSprite(750, 500, 1500, 1000, "sf4")
+    .setScale(1)
+    
+    this.sf3 = this.add.tileSprite(750, 750, 1500, 1000, "sf3")
+    .setScale(1)
+    
+    
+    this.sfpav = this.add
+    .image(this.game.canvas.width / 2,this.game.canvas.height / 2.1, "sfpav")
+    .setScale(1)
+
+    this._sprite1 = this.add
+    .sprite(this.game.canvas.width / 4, 840, "sprite1")
+    .setScale(2);
+    
+
+    var mummyAnimation = this.anims.create({
+        key: 'walk',
+        frames: this.anims.generateFrameNumbers('sprite', {
+            frames: this._runAnimation}),
+        frameRate: 16,
+        repeat: 0
+    });
+
+    var sprite = this.add.sprite(this.game.canvas.width / 1, 840, 'sprite')
+    .setScale(2);
+     sprite.play('walk');
+
+    sprite.anims.setRepeat(7);
+
+    this.tweens.add({
+        targets: sprite,
+        x: 820,
+        duration: 5000,
+        ease: 'Linear',
+        frameRate: 10,
+    });
+    
+    
+    let _sprite1 = {
+    key: "corri",
+    frames: this.anims.generateFrameNumbers("sprite1", {
+    frames: this._runcavallo
+    }),
+    frameRate: 10,
+    yoyo: false,
+    repeat: -1
+    };
+    
+    
+    this.anims.create(_sprite1);
+    
+    this._sprite1.play("corri");
+    
+    this._music = this.sound.add("intro");
+        this._music.play(undefined, {
+          loop: true,
+          volume: 0
+        });
+    this._text = this.add.text(5, 50, "")
+    .setScale(4);
+
+    this._text1 = this.add.text(4.2, 100, "")
+    .setScale(1.8);
+
+
+   
+    let ship = {
+        key: "corri",
+        frames: this.anims.generateFrameNumbers("sprite1", {
+        frames: this._runcavallo
+        }),
+        frameRate: 10,
+        yoyo: false,
+        repeat: -1
+        };
+        this.anims.create(_sprite1);
+    
+        this._sprite1.play("corri");
+         //@ts-ignore
+        var Bullet = new Phaser.Class({
+
+            Extends: Phaser.GameObjects.Image,
+    
+            initialize:
+    
+            function Bullet (scene: Phaser.Scene)
+            {
+                Phaser.GameObjects.Image.call(this, scene, 4, 840, 'bullet');
+            
+                this.speed = Phaser.Math.GetSpeed(400, -1);
+            },
+            
+    
+            fire: function (x: any, y: number)
+            {
+                this.setPosition(x, y + -9);
+    
+                this.setActive(true);
+                this.setVisible(true);
+            },
+    
+            update: function (_time: any, delta: number)
+            {
+                this.x -= this.speed * delta;
+    
+                if (this.x < -50)
+                {
+                    this.setActive(false);
+                    this.setVisible(false);
+                }
+            }
+    
+        });
+    
+        this.bullets = this.add.group({
+            classType: Bullet,
+            maxSize:50,
+            runChildUpdate: true
+        });
+    
+    this.bullets.createMultiple({ quantity: 200, active: false });
+    //@ts-ignore
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.speeds = Phaser.Math.GetSpeed(400, 1);
+    }
+
+    update(time: any, delta: number): void {
+        
+        this.sf.tilePositionX += 1.0;
+        this.sf1.tilePositionX += 1.0;
+        this.sf2.tilePositionX += 0.5;
+        this.sf3.tilePositionX += 0.5;
+        this._text.setText(" LEVEL 1");
+       
+  //@ts-ignore
+        if (this.cursors.left.isDown)
+    {
+        this._sprite1.x -= this.speeds * delta;
+    }
+     //@ts-ignore
+    else if (this.cursors.right.isDown)
+    {
+        this._sprite1.x += this.speeds * delta;
+        
+    }
+     //@ts-ignore 
+    else if(this.cursors.up.isDown)
+    {
+ //@ts-ignore
+        if((this._sprite1.y >= 750)) {
+            this._sprite1.y -= 1 * delta;
+        }
+     }
+      //@ts-ignore
+    else if(this.cursors.down.isDown)
+    {
+        console.log(this._sprite1.y)
+         //@ts-ignore
+        if((this._sprite1.y <= 872)) {
+            this._sprite1.y += 2 * delta;
+        }
+        
+    }
+     //@ts-ignore
+    if (this.cursors.space.isDown && time > this.lastFired)
+    {
+        var bullet = this.bullets.get();
+        
+ //@ts-ignore
+        if (bullet)
+        {
+            bullet.fire(this._sprite1.x, this._sprite1.y);
+            this.lastFired = time + 150;
+        }
+    }}}
